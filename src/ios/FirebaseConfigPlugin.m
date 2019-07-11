@@ -34,27 +34,19 @@
 }
 
 - (void)activate:(CDVInvokedUrlCommand *)command {
-    BOOL wasActivated = self.remoteConfig.lastFetchStatus == FIRRemoteConfigFetchAndActivateStatusSuccessFetchedFromRemote;
-    [self.remoteConfig activateWithCompletionHandler:^(NSError * _Nullable err) {
-        CDVPluginResult *pluginResult = nil;
-        if (err) {
-            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:err.localizedDescription];
-        } else {
-            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:
-                            (!wasActivated && self.remoteConfig.lastFetchStatus == FIRRemoteConfigFetchAndActivateStatusSuccessFetchedFromRemote)];
-        }
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-    }];
+    BOOL result = [self.remoteConfig activateFetched];
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:result];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 - (void)fetchAndActivate:(CDVInvokedUrlCommand *)command {
-    [self.remoteConfig fetchAndActivateWithCompletionHandler:^(FIRRemoteConfigFetchAndActivateStatus status, NSError * _Nullable err) {
+    [self.remoteConfig fetchWithCompletionHandler:^(FIRRemoteConfigFetchStatus status, NSError *err) {
         CDVPluginResult *pluginResult = nil;
         if (err) {
             pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:err.localizedDescription];
         } else {
-            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:
-                            (status == FIRRemoteConfigFetchAndActivateStatusSuccessFetchedFromRemote)];
+            BOOL result = [self.remoteConfig activateFetched];
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:result];
         }
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     }];
